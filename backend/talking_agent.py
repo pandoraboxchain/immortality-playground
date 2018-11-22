@@ -6,29 +6,27 @@ from parlai.core.utils import display_messages, load_cands
 
 class TelegramAgent(Agent):
 
+    message_queue = []
+
     def __init__(self, opt, shared=None):
         super().__init__(opt)
         self.id = 'Telegram'
         self.episodeDone = False
-        self.message_queue = []
-        self.seen_messages = {}
         self.bot = opt['bot']
 
+
     def observe(self, msg):
-        current_message = self.message_queue.pop(0)
+        current_message = TelegramAgent.message_queue.pop()
         self.bot.send_message(chat_id=current_message.chat_id,
-                              text=display_messages([msg], prettify=self.opt.get('display_prettify', True)))
-        print(display_messages([msg],
-                               ignore_fields=self.opt.get('display_ignore_fields', ''),
-                               prettify=self.opt.get('display_prettify', True)))
+                              text=display_messages([msg], prettify=True, ignore_fields='text_candidates'))
 
     def add_message(self, update):
-       self.message_queue.insert(0, update.message)
+        TelegramAgent.message_queue.insert(0, update.message)
 
     def act(self):
         reply = {}
         reply['id'] = self.getID()
-        current_message = self.message_queue[0];
+        current_message = TelegramAgent.message_queue[-1];
         reply_text = current_message.text
         reply_text = reply_text.replace('\\n', '\n')
         reply['episode_done'] = False
@@ -40,5 +38,4 @@ class TelegramAgent(Agent):
         return reply
 
     def episode_done(self):
-        self.chat_id = 0
         return self.episodeDone

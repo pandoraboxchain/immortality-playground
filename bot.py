@@ -4,6 +4,7 @@ from parlai.core.params import ParlaiParser
 from parlai.core.agents import create_agent
 from parlai.core.worlds import create_task
 from parlai.core.build_data import download_models
+from backend.talking_agent import TelegramAgent
 import config
 
 parser = ParlaiParser()
@@ -11,7 +12,7 @@ parser.set_params(
         task='backend.talking_agent:TelegramAgent',
         model='projects.personachat.kvmemnn.kvmemnn:KvmemnnAgent',
         model_file='models:personachat/kvmemnn/kvmemnn/persona-self_rephraseTrn-True_rephraseTst-False_lr-0.1_esz-500_margin-0.1_tfidf-False_shareEmb-True_hops1_lins0_model',
-        interactive_mode=True,
+        interactive_mode=True
     )
 
 fnames = ['kvmemnn.tgz']
@@ -25,15 +26,17 @@ dispatcher = updater.dispatcher
 opt['bot'] = updater.bot
 
 # Create model and assign it to the specified task
-agent = create_agent(opt, requireModelExists=True)
+agent = create_agent(opt, requireModelExists=False) 
 world = create_task(opt, agent)
+print(world.agents)
 
 def startCommand(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Here I am, speaking from the great Eternity')
 
 
 def textMessage(bot, update):
-    agent.add_message(update)
+    # FIXME говнокодишшоооооооо! 
+    world.agents[0].add_message(update)
     world.parley()
 
 
