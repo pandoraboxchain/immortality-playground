@@ -4,20 +4,26 @@ from parlai.core.params import ParlaiParser
 from parlai.core.agents import create_agent
 from parlai.core.worlds import create_task
 from parlai.core.build_data import download_models
-from backend.talking_agent import TelegramAgent
+from projects.personachat.persona_seq2seq import PersonachatSeqseqAgentSplit
 import config
 
-parser = ParlaiParser()
-parser.set_params(
-        task='backend.talking_agent:TelegramAgent',
-        model='projects.personachat.kvmemnn.kvmemnn:KvmemnnAgent',
-        model_file='models:personachat/kvmemnn/kvmemnn/persona-self_rephraseTrn-True_rephraseTst-False_lr-0.1_esz-500_margin-0.1_tfidf-False_shareEmb-True_hops1_lins0_model',
-        interactive_mode=True
-    )
+parser = ParlaiParser(add_model_args=True)
+parser.add_argument('-d', '--display-examples', type='bool', default=False)
+PersonachatSeqseqAgentSplit.add_cmdline_args(parser)
+parser.set_defaults(
+    dict_file='models:personachat/profile_memory/fulldict.dict',
+    interactive_mode=True,
+    task='backend.talking_agent:TelegramAgent',
+    model='projects.personachat.persona_seq2seq:PersonachatSeqseqAgentSplit',
+    model_file='models:personachat/profile_memory/profilememory_learnreweight_sharelt_encdropout0.4_s2s_usepersona_self_useall_attn_general_lstm_1024_1_1e-3_0.1'
+)
 
-fnames = ['kvmemnn.tgz']
 opt = parser.parse_args()
-opt['model_type'] = 'kvmemnn' # for builder
+opt['model_type'] = 'profile_memory'
+
+fnames = ['profilememory_mem2_reweight_sharelt_encdropout0.2_selfpersona_useall_attn_general_lstm_1024_1_1e-3_0.1',
+          'profilememory_learnreweight_sharelt_encdropout0.4_s2s_usepersona_self_useall_attn_general_lstm_1024_1_1e-3_0.1',
+          'fulldict.dict']
 download_models(opt, fnames, 'personachat')
 
 updater = Updater(token=config.telegram_key)
@@ -28,14 +34,13 @@ opt['bot'] = updater.bot
 # Create model and assign it to the specified task
 agent = create_agent(opt, requireModelExists=False) 
 world = create_task(opt, agent)
-print(world.agents)
 
 def startCommand(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Here I am, speaking from the great Eternity')
 
 
 def textMessage(bot, update):
-    # FIXME говнокодишшоооооооо! 
+    # FIXME find a better way to pass the chat without encapsulation violation
     world.agents[0].add_message(update)
     world.parley()
 
