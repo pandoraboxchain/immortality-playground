@@ -17,7 +17,7 @@ class TelegramAgent(Agent):
 
     def observe(self, msg):
         current_message = TelegramAgent.message_queue.pop()
-        msg_text = display_messages(text=display_messages([msg], prettify=True, ignore_fields='text_candidates')
+        msg_text = display_messages(text=display_messages([msg], prettify=True, ignore_fields='text_candidates'))
         self.bot.send_message(chat_id=current_message.chat_id,
                               text=msg_text.replace("[Seq2Seq]:", ""))
 
